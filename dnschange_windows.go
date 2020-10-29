@@ -8,8 +8,6 @@ import (
 )
 
 func (d *DNSStruct) Change(dns string) {
-	var OriginalDNSServer string
-	var InterfaceName string
 	gatewayIP, _ := gateway.DiscoverGateway()
 	NetInterface := netsh.New(nil)
 	NetInterfaces, err := NetInterface.GetInterfaces()
