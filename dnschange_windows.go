@@ -16,6 +16,7 @@ func (d *DNSStruct) Change(dns string) {
 	}
 	for _, v := range NetInterfaces {
 		if gatewayIP.String() == v.DefaultGatewayAddress {
+			NetInterface.SetInterfaceDNSConfig(v)
 			d.NetInterface = NetInterface
 			d.NetInterface.(netsh.Interface).SetDNSServer(dns)
 		}
