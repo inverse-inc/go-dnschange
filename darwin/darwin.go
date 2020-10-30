@@ -1,4 +1,4 @@
-package scutil
+package darwin
 
 import (
 	"errors"
@@ -11,7 +11,6 @@ import (
 )
 
 const (
-	cmdScutil       string = "scutil"
 	cmdNetworksetup string = "networksetup"
 	cmdIfconfig     string = "ifconfig"
 )
@@ -63,67 +62,27 @@ func New(exec utilexec.Interface) Interface {
 
 // GetDNSServers uses the show addresses command and returns a formatted structure
 func (runner *runner) GetDNSServers(ifname string) error {
+	runner.InterFaceDNSConfig = DNSConfig{}
+
+	err := runner.InterfaceAliasName(ifname)
+
 	args := []string{
-		"--dns",
+		"-getdnsservers", runner.InterFaceDNSConfig.IfName,
 	}
 
-	output, _ := runner.exec.Command(cmdScutil, args...).CombinedOutput()
+	output, _ := runner.exec.Command(cmdNetworksetup, args...).CombinedOutput()
 
 	DNSString := string(output[:])
 
 	outputLines := strings.Split(DNSString, "\n")
 
-	interfacePattern := regexp.MustCompile("^\\d+\\s+\\((.*)\\)")
-
-	runner.InterFaceDNSConfig = DNSConfig{}
-
-	found := false
-
 	for _, outputLine := range outputLines {
-		if !found {
-			if strings.Contains(outputLine, "DNS configuration (for scoped queries)") {
-				found = true
-			} else {
-				continue
-			}
-		}
-
-		parts := strings.SplitN(outputLine, ":", 2)
-		if len(parts) != 2 {
-			continue
-		}
-		key := strings.TrimSpace(parts[0])
-		value := strings.TrimSpace(parts[1])
-
-		if strings.HasPrefix(key, "if_index") {
-			match := interfacePattern.FindStringSubmatch(value)
-			if match[1] == ifname {
-				found = true
-				runner.InterFaceDNSConfig.IfIndex = ifname
-			}
-		} else if strings.HasPrefix(key, "nameserver") {
-			runner.InterFaceDNSConfig.NameServers = append(runner.InterFaceDNSConfig.NameServers, value)
-		} else if strings.HasPrefix(key, "search domain") {
-			runner.InterFaceDNSConfig.SearchDomain = append(runner.InterFaceDNSConfig.SearchDomain, value)
-		} else if strings.HasPrefix(key, "flags") {
-			runner.InterFaceDNSConfig.Flags = value
-		} else if strings.HasPrefix(key, "reach") {
-			runner.InterFaceDNSConfig.Reach = value
-		} else if strings.HasPrefix(key, "domain") {
-			runner.InterFaceDNSConfig.Domain = value
-		} else if strings.HasPrefix(key, "reach") {
-			runner.InterFaceDNSConfig.Reach = value
-		} else if strings.HasPrefix(key, "options") {
-			runner.InterFaceDNSConfig.Options = value
-		}
+		runner.InterFaceDNSConfig.NameServers = append(runner.InterFaceDNSConfig.NameServers, outputLine)
 	}
-
-	err := runner.InterfaceAliasName()
-
 	return err
 }
 
-func (runner *runner) InterfaceAliasName() error {
+func (runner *runner) InterfaceAliasName(ifname string) error {
 
 	args := []string{
 		"-listnetworkserviceorder",
@@ -142,7 +101,7 @@ func (runner *runner) InterfaceAliasName() error {
 	for _, outputLine := range outputLines {
 		if strings.Contains(outputLine, "Hardware Port") {
 			match := interfacePattern.FindStringSubmatch(outputLine)
-			if match[2] == runner.InterFaceDNSConfig.IfIndex {
+			if match[2] == ifname {
 				runner.InterFaceDNSConfig.IfName = match[1]
 				err = nil
 			}

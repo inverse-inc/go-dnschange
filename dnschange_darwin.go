@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/inverse-inc/go-dnschange/scutil"
+	"github.com/inverse-inc/go-dnschange/darwin"
 	"github.com/jackpal/gateway"
 )
 
@@ -22,7 +22,7 @@ func (d *DNSStruct) Change(dns string) {
 			}
 		}
 	}
-	NetInterface := scutil.New(nil)
+	NetInterface := darwin.New(nil)
 	err := NetInterface.GetDNSServers(gatewayInterface)
 	if err != nil {
 		fmt.Println(err)
@@ -34,6 +34,6 @@ func (d *DNSStruct) Change(dns string) {
 }
 
 func (d *DNSStruct) RestoreDNS(dns string) {
-	d.NetInterface.(scutil.Interface).ResetDNSServer()
-	d.NetInterface.(scutil.Interface).RemoveInterfaceAlias(dns)
+	d.NetInterface.(darwin.Interface).ResetDNSServer()
+	d.NetInterface.(darwin.Interface).RemoveInterfaceAlias(dns)
 }
