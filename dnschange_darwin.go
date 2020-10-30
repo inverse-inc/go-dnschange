@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/fdurand/modifyDNS/scutil"
+	"github.com/inverse-inc/go-dnschange/scutil"
 	"github.com/jackpal/gateway"
 )
 

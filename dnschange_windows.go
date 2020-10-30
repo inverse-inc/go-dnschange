@@ -3,7 +3,6 @@ package godnschange
 import (
 	"fmt"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/inverse-inc/go-dnschange/windows"
 	"github.com/jackpal/gateway"
 )
@@ -18,7 +17,6 @@ func (d *DNSStruct) Change(dns string) {
 	for _, v := range NetInterfaces {
 		for _, w := range v.DefaultGateway {
 			if gatewayIP.String() == w.String() {
-				spew.Dump(v)
 				NetInterface.SetInterfaceDNSConfig(v)
 				d.NetInterface = NetInterface
 				d.NetInterface.(windows.Interface).SetDNSServer(dns)
