@@ -15,10 +15,7 @@ type Interface interface {
 	GetInterfaces() ([]NetworkInterface, error)
 	SetInterfaceDNSConfig(NetworkInterface)
 	SetDNSServer(dns string) error
-	// // Reset DNS server
-	// ResetDNSServer() error
-	// AddInterfaceAlias(string) error
-	// RemoveInterfaceAlias(string) error
+	ResetDNSServer() error
 }
 
 func New() Interface {

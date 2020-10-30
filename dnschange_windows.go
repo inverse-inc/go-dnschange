@@ -21,7 +21,7 @@ func (d *DNSStruct) Change(dns string) {
 				spew.Dump(v)
 				NetInterface.SetInterfaceDNSConfig(v)
 				d.NetInterface = NetInterface
-				// d.NetInterface.(netsh.Interface).SetDNSServer(dns)
+				d.NetInterface.(windows.Interface).SetDNSServer(dns)
 			}
 		}
 	}
