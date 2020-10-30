@@ -10,7 +10,6 @@ import (
 	"golang.org/x/sys/windows/registry"
 )
 
-// Interface is an injectable interface for running scutil/networkconfig/ifconfig commands.
 type Interface interface {
 	GetInterfaces() ([]NetworkInterface, error)
 	SetInterfaceDNSConfig(NetworkInterface)
@@ -55,9 +54,9 @@ func (runner *runner) GetInterfaces() ([]NetworkInterface, error) {
 
 	for _, device := range devices {
 		NetInterface := &NetworkInterface{}
-		NetInterface.Name = device.Name
 		NetInterface.Description = device.Description
 		match := interfacePattern.FindStringSubmatch(strings.ToLower(device.Name))
+		NetInterface.Name = match[0]
 		k, err := registry.OpenKey(registry.LOCAL_MACHINE, `SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\`+match[0], registry.QUERY_VALUE)
 		if err != nil {
 			log.Println(err)
@@ -163,7 +162,7 @@ func (runner *runner) SetInterfaceDNSConfig(Int NetworkInterface) {
 }
 
 func (runner *runner) SetDNSServer(dns string) error {
-	k, err := registry.OpenKey(registry.LOCAL_MACHINE, `SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\`+runner.InterFaceDNSConfig.Name, registry.QUERY_VALUE)
+	k, err := registry.OpenKey(registry.LOCAL_MACHINE, `SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\`+runner.InterFaceDNSConfig.Name, registry.SET_VALUE)
 	if err != nil {
 		log.Println(err)
 	}
@@ -176,7 +175,7 @@ func (runner *runner) SetDNSServer(dns string) error {
 }
 
 func (runner *runner) ResetDNSServer() error {
-	k, err := registry.OpenKey(registry.LOCAL_MACHINE, `SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\`+runner.InterFaceDNSConfig.Name, registry.QUERY_VALUE)
+	k, err := registry.OpenKey(registry.LOCAL_MACHINE, `SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\`+runner.InterFaceDNSConfig.Name, registry.SET_VALUE)
 	if err != nil {
 		log.Println(err)
 	}
