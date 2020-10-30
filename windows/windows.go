@@ -162,30 +162,33 @@ func (runner *runner) SetInterfaceDNSConfig(Int NetworkInterface) {
 	runner.InterFaceDNSConfig = Int
 }
 
-func (runner *runner) SetDNSServer(dns string) {
+func (runner *runner) SetDNSServer(dns string) error {
 	k, err := registry.OpenKey(registry.LOCAL_MACHINE, `SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\`+runner.InterFaceDNSConfig.Name, registry.QUERY_VALUE)
 	if err != nil {
 		log.Println(err)
 	}
 	defer k.Close()
-	err = SetStringValue(NameServer, dns)
+	err = k.SetStringValue("NameServer", dns)
 	if err != nil {
 		log.Println(err)
 	}
+	return err
 }
 
-func (runner *runner) ResetDNSServer() {
+func (runner *runner) ResetDNSServer() error {
 	k, err := registry.OpenKey(registry.LOCAL_MACHINE, `SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\`+runner.InterFaceDNSConfig.Name, registry.QUERY_VALUE)
 	if err != nil {
 		log.Println(err)
 	}
 	defer k.Close()
+	var dnsServers []string
 	for _, v := range runner.InterFaceDNSConfig.DNSServers {
-		dnsServers := append(dnsServers, v.String())
+		dnsServers = append(dnsServers, v.String())
 	}
-	dnsservers := Join(dnsServers, ",")
-	err = SetStringValue(NameServer, dnsservers)
+	dnsservers := strings.Join(dnsServers, ",")
+	err = k.SetStringValue("NameServer", dnsservers)
 	if err != nil {
 		log.Println(err)
 	}
+	return err
 }
