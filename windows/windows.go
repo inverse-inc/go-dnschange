@@ -168,7 +168,7 @@ func (runner *runner) SetDNSServer(dns string) {
 		log.Println(err)
 	}
 	defer k.Close()
-	err = SetStringValue(NameServer, dns) error
+	err = SetStringValue(NameServer, dns)
 	if err != nil {
 		log.Println(err)
 	}
@@ -180,13 +180,12 @@ func (runner *runner) ResetDNSServer() {
 		log.Println(err)
 	}
 	defer k.Close()
-	for _,v := range runner.InterFaceDNSConfig.DNSServers {
+	for _, v := range runner.InterFaceDNSConfig.DNSServers {
 		dnsServers := append(dnsServers, v.String())
 	}
 	dnsservers := Join(dnsServers, ",")
-	err = SetStringValue(NameServer, dnsservers) error
+	err = SetStringValue(NameServer, dnsservers)
 	if err != nil {
 		log.Println(err)
 	}
 }
-
