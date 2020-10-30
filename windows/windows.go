@@ -10,6 +10,7 @@ import (
 	"golang.org/x/sys/windows/registry"
 )
 
+// Interface is an injectable interface for running commands.
 type Interface interface {
 	GetInterfaces() ([]NetworkInterface, error)
 	SetInterfaceDNSConfig(NetworkInterface)
@@ -17,6 +18,7 @@ type Interface interface {
 	ResetDNSServer() error
 }
 
+// New returns a new Interface
 func New() Interface {
 
 	runner := &runner{}
@@ -29,6 +31,7 @@ type runner struct {
 	InterFaceDNSConfig NetworkInterface
 }
 
+// NetworkInterface structure
 type NetworkInterface struct {
 	Name           string
 	Description    string
