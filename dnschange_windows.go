@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/davecgh/go-spew/spew"
-	"github.com/fdurand/modifyDNS/windows"
+	"github.com/inverse-inc/go-dnschange/windows"
 	"github.com/jackpal/gateway"
 )
 
