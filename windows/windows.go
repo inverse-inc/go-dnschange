@@ -10,17 +10,11 @@ import (
 	"golang.org/x/sys/windows/registry"
 )
 
-const (
-	cmdScutil       string = "scutil"
-	cmdNetworksetup string = "networksetup"
-	cmdIfconfig     string = "ifconfig"
-)
-
 // Interface is an injectable interface for running scutil/networkconfig/ifconfig commands.
 type Interface interface {
 	GetInterfaces() ([]NetworkInterface, error)
-	// // Set DNS server
-	// SetDNSServer(dns string) error
+	SetInterfaceDNSConfig(NetworkInterface)
+	SetDNSServer(dns string) error
 	// // Reset DNS server
 	// ResetDNSServer() error
 	// AddInterfaceAlias(string) error
@@ -170,3 +164,32 @@ func (runner *runner) GetInterfaces() ([]NetworkInterface, error) {
 func (runner *runner) SetInterfaceDNSConfig(Int NetworkInterface) {
 	runner.InterFaceDNSConfig = Int
 }
+
+func (runner *runner) SetDNSServer(dns string) {
+	k, err := registry.OpenKey(registry.LOCAL_MACHINE, `SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\`+runner.InterFaceDNSConfig.Name, registry.QUERY_VALUE)
+	if err != nil {
+		log.Println(err)
+	}
+	defer k.Close()
+	err = SetStringValue(NameServer, dns) error
+	if err != nil {
+		log.Println(err)
+	}
+}
+
+func (runner *runner) ResetDNSServer() {
+	k, err := registry.OpenKey(registry.LOCAL_MACHINE, `SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\`+runner.InterFaceDNSConfig.Name, registry.QUERY_VALUE)
+	if err != nil {
+		log.Println(err)
+	}
+	defer k.Close()
+	for _,v := range runner.InterFaceDNSConfig.DNSServers {
+		dnsServers := append(dnsServers, v.String())
+	}
+	dnsservers := Join(dnsServers, ",")
+	err = SetStringValue(NameServer, dnsservers) error
+	if err != nil {
+		log.Println(err)
+	}
+}
+

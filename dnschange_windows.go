@@ -19,7 +19,7 @@ func (d *DNSStruct) Change(dns string) {
 		for _, w := range v.DefaultGateway {
 			if gatewayIP.String() == w.String() {
 				spew.Dump(v)
-				// NetInterface.SetInterfaceDNSConfig(v)
+				NetInterface.SetInterfaceDNSConfig(v)
 				d.NetInterface = NetInterface
 				// d.NetInterface.(netsh.Interface).SetDNSServer(dns)
 			}
@@ -28,5 +28,5 @@ func (d *DNSStruct) Change(dns string) {
 }
 
 func (d *DNSStruct) RestoreDNS(dns string) {
-	// d.NetInterface.(netsh.Interface).ResetDNSServer()
+	d.NetInterface.(windows.Interface).ResetDNSServer()
 }
