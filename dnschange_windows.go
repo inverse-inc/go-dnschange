@@ -25,6 +25,24 @@ func (d *DNSStruct) Change(dns string) {
 	}
 }
 
+func (d *DNSStruct) GetDNS() []string {
+	gatewayIP, _ := gateway.DiscoverGateway()
+	NetInterface := windows.New()
+	NetInterfaces, err := NetInterface.GetInterfaces()
+	if err != nil {
+		fmt.Println(err)
+	}
+	for _, v := range NetInterfaces {
+		for _, w := range v.DefaultGateway {
+			if gatewayIP.String() == w.String() {
+				NetInterface.SetInterfaceDNSConfig(v)
+				d.NetInterface = NetInterface
+			}
+		}
+	}
+	return NetInterface.InterFaceDNSConfig.DNSServers
+}
+
 func (d *DNSStruct) RestoreDNS(dns string) {
 	d.NetInterface.(windows.Interface).ResetDNSServer()
 }

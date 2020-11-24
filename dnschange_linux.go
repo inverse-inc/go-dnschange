@@ -23,6 +23,15 @@ func (d *DNSStruct) Change(dns string) {
 	f.Sync()
 }
 
+func (d *DNSStruct) GetDNS() []string {
+
+	var DNS []string
+
+	DNS = append(DNS, "/etc/resolv.conf.save")
+
+	return DNS
+}
+
 func (d *DNSStruct) RestoreDNS(dns string) {
 	err := os.Remove(resolvConf)
 	if err != nil {
