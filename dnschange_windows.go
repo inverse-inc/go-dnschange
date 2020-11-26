@@ -40,7 +40,7 @@ func (d *DNSStruct) GetDNS() []string {
 			}
 		}
 	}
-	return NetInterface.InterFaceDNSConfig.DNSServers
+	return d.NetInterface.(windows.Interface).ReturnDNS()
 }
 
 func (d *DNSStruct) RestoreDNS(dns string) {
