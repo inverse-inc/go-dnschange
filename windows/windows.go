@@ -61,9 +61,14 @@ func (runner *runner) GetInterfaces() ([]NetworkInterface, error) {
 		NetInterface.Description = device.Description
 		match := interfacePattern.FindStringSubmatch(strings.ToLower(device.Name))
 		NetInterface.Name = match[0]
+		if len(match) == 0 {
+			continue
+		}
+		NetInterface.Name = match[0]
 		k, err := registry.OpenKey(registry.LOCAL_MACHINE, `SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\`+match[0], registry.QUERY_VALUE)
 		if err != nil {
 			log.Println(err)
+			continue
 		}
 		defer k.Close()
 		s, _, err := k.GetIntegerValue("EnableDHCP")
@@ -90,7 +95,7 @@ func (runner *runner) GetInterfaces() ([]NetworkInterface, error) {
 				NetInterface.IPAddress = net.ParseIP(t)
 			}
 			t, _, err = k.GetStringValue("NameServer")
-			if err != nil {
+			if err != nil || len(t) == 0 {
 				t, _, err = k.GetStringValue("DhcpNameServer")
 				if err != nil {
 					log.Println(err)
