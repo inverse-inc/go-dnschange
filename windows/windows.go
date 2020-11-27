@@ -60,7 +60,6 @@ func (runner *runner) GetInterfaces() ([]NetworkInterface, error) {
 		NetInterface := &NetworkInterface{}
 		NetInterface.Description = device.Description
 		match := interfacePattern.FindStringSubmatch(strings.ToLower(device.Name))
-		NetInterface.Name = match[0]
 		if len(match) == 0 {
 			continue
 		}
