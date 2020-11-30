@@ -13,6 +13,7 @@ import (
 const (
 	cmdNetworksetup string = "networksetup"
 	cmdIfconfig     string = "ifconfig"
+	cmdScutil       string = "scutil"
 )
 
 // Interface is an injectable interface for running scutil/networkconfig/ifconfig commands.
@@ -75,10 +76,69 @@ func (runner *runner) GetDNSServers(ifname string) error {
 
 	DNSString := string(output[:])
 
-	outputLines := strings.Split(DNSString, "\n")
+	if strings.Contains("There aren't any DNS Servers set on", DNSString) {
+		args := []string{
+			"--dns",
+		}
 
-	for _, outputLine := range outputLines {
-		runner.InterFaceDNSConfig.NameServers = append(runner.InterFaceDNSConfig.NameServers, outputLine)
+		output, _ := runner.exec.Command(cmdScutil, args...).CombinedOutput()
+
+		DNSString := string(output[:])
+
+		outputLines := strings.Split(DNSString, "\n")
+
+		interfacePattern := regexp.MustCompile("^\\d+\\s+\\((.*)\\)")
+
+		runner.InterFaceDNSConfig = DNSConfig{}
+
+		found := false
+
+		for _, outputLine := range outputLines {
+			if !found {
+				if strings.Contains(outputLine, "DNS configuration (for scoped queries)") {
+					found = true
+				} else {
+					continue
+				}
+			}
+
+			parts := strings.SplitN(outputLine, ":", 2)
+			if len(parts) != 2 {
+				continue
+			}
+			key := strings.TrimSpace(parts[0])
+			value := strings.TrimSpace(parts[1])
+
+			if strings.HasPrefix(key, "if_index") {
+				match := interfacePattern.FindStringSubmatch(value)
+				if match[1] == ifname {
+					found = true
+					runner.InterFaceDNSConfig.IfIndex = ifname
+				}
+			} else if strings.HasPrefix(key, "nameserver") {
+				runner.InterFaceDNSConfig.NameServers = append(runner.InterFaceDNSConfig.NameServers, value)
+			} else if strings.HasPrefix(key, "search domain") {
+				runner.InterFaceDNSConfig.SearchDomain = append(runner.InterFaceDNSConfig.SearchDomain, value)
+			} else if strings.HasPrefix(key, "flags") {
+				runner.InterFaceDNSConfig.Flags = value
+			} else if strings.HasPrefix(key, "reach") {
+				runner.InterFaceDNSConfig.Reach = value
+			} else if strings.HasPrefix(key, "domain") {
+				runner.InterFaceDNSConfig.Domain = value
+			} else if strings.HasPrefix(key, "reach") {
+				runner.InterFaceDNSConfig.Reach = value
+			} else if strings.HasPrefix(key, "options") {
+				runner.InterFaceDNSConfig.Options = value
+			}
+		}
+
+	} else {
+
+		outputLines := strings.Split(DNSString, "\n")
+
+		for _, outputLine := range outputLines {
+			runner.InterFaceDNSConfig.NameServers = append(runner.InterFaceDNSConfig.NameServers, outputLine)
+		}
 	}
 	return err
 }
