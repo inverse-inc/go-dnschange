@@ -159,3 +159,11 @@ func (runner *runner) RemoveInterfaceAlias(ip string) error {
 	}
 	return nil
 }
+
+func (runner *runner) ReturnDNS() []string {
+	var dnsServers []string
+	for _, v := range runner.InterFaceDNSConfig.NameServers {
+		dnsServers = append(dnsServers, v)
+	}
+	return dnsServers
+}

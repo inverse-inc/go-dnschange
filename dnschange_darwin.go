@@ -53,7 +53,7 @@ func (d *DNSStruct) GetDNS() []string {
 		fmt.Println(err)
 	}
 	d.NetInterface = NetInterface
-	return NetInterface.InterFaceDNSConfig.NameServers
+	return d.NetInterface.(darwin.Interface).ReturnDNS()
 }
 
 func (d *DNSStruct) RestoreDNS(dns string) {
