@@ -25,6 +25,7 @@ type Interface interface {
 	ResetDNSServer() error
 	AddInterfaceAlias(string) error
 	RemoveInterfaceAlias(string) error
+	ReturnDNS() []string
 }
 
 // runner implements Interface
