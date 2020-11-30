@@ -76,7 +76,7 @@ func (runner *runner) GetDNSServers(ifname string) error {
 
 	DNSString := string(output[:])
 
-	if strings.Contains("There aren't any DNS Servers set on", DNSString) {
+	if strings.Contains(DNSString, "There aren't any DNS Servers set on") {
 		args := []string{
 			"--dns",
 		}
