@@ -8,3 +8,7 @@ func NewDNSChange() *DNSStruct {
 	d := &DNSStruct{}
 	return d
 }
+
+func (d *DNSStruct) DoNothing() {
+
+}
