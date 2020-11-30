@@ -89,8 +89,6 @@ func (runner *runner) GetDNSServers(ifname string) error {
 
 		interfacePattern := regexp.MustCompile("^\\d+\\s+\\((.*)\\)")
 
-		runner.InterFaceDNSConfig = DNSConfig{}
-
 		found := false
 
 		for _, outputLine := range outputLines {
