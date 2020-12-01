@@ -25,7 +25,8 @@ func (d *DNSStruct) Change(dns string) {
 	}
 }
 
-func (d *DNSStruct) GetDNS() []string {
+func (d *DNSStruct) GetDNS() *DNSInfo {
+	InfoDNS := &DNSInfo{}
 	gatewayIP, _ := gateway.DiscoverGateway()
 	NetInterface := windows.New()
 	NetInterfaces, err := NetInterface.GetInterfaces()
@@ -40,7 +41,9 @@ func (d *DNSStruct) GetDNS() []string {
 			}
 		}
 	}
-	return d.NetInterface.(windows.Interface).ReturnDNS()
+	InfoDNS.NameServers = d.NetInterface.(windows.Interface).ReturnDNS()
+	InfoDNS.SearchDomain = d.NetInterface.(windows.Interface).ReturnDomainSearch()
+	return InfoDNS
 }
 
 func (d *DNSStruct) RestoreDNS(dns string) {

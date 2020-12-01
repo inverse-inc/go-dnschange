@@ -27,6 +27,7 @@ type Interface interface {
 	AddInterfaceAlias(string) error
 	RemoveInterfaceAlias(string) error
 	ReturnDNS() []string
+	ReturnDomainSearch() []string
 }
 
 // runner implements Interface
@@ -87,7 +88,7 @@ func (runner *runner) GetDNSServers(ifname string) error {
 
 		outputLines := strings.Split(DNSString, "\n")
 
-		interfacePattern := regexp.MustCompile("^\\d+\\s+\\((.*)\\)")
+		// interfacePattern := regexp.MustCompile("^\\d+\\s+\\((.*)\\)")
 
 		found := false
 
@@ -107,13 +108,14 @@ func (runner *runner) GetDNSServers(ifname string) error {
 			key := strings.TrimSpace(parts[0])
 			value := strings.TrimSpace(parts[1])
 
-			if strings.HasPrefix(key, "if_index") {
-				match := interfacePattern.FindStringSubmatch(value)
-				if match[1] == ifname {
-					found = true
-					runner.InterFaceDNSConfig.IfIndex = ifname
-				}
-			} else if strings.HasPrefix(key, "nameserver") {
+			// if strings.HasPrefix(key, "if_index") {
+			// 	match := interfacePattern.FindStringSubmatch(value)
+			// 	if match[1] == ifname {
+			// 		found = true
+			// 		runner.InterFaceDNSConfig.IfIndex = ifname
+			// 	}
+			// } else
+			if strings.HasPrefix(key, "nameserver") {
 				runner.InterFaceDNSConfig.NameServers = append(runner.InterFaceDNSConfig.NameServers, value)
 			} else if strings.HasPrefix(key, "search domain") {
 				runner.InterFaceDNSConfig.SearchDomain = append(runner.InterFaceDNSConfig.SearchDomain, value)
@@ -220,9 +222,9 @@ func (runner *runner) RemoveInterfaceAlias(ip string) error {
 }
 
 func (runner *runner) ReturnDNS() []string {
-	var dnsServers []string
-	for _, v := range runner.InterFaceDNSConfig.NameServers {
-		dnsServers = append(dnsServers, v)
-	}
-	return dnsServers
+	return runner.InterFaceDNSConfig.NameServers
+}
+
+func (runner *runner) ReturnDomainSearch() []string {
+	return runner.InterFaceDNSConfig.SearchDomain
 }

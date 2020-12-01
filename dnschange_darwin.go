@@ -33,7 +33,8 @@ func (d *DNSStruct) Change(dns string) {
 	d.NetInterface = NetInterface
 }
 
-func (d *DNSStruct) GetDNS() []string {
+func (d *DNSStruct) GetDNS() *DNSInfo {
+	InfoDNS := &DNSInfo{}
 	gatewayIP, _ := gateway.DiscoverGateway()
 	var gatewayInterface string
 	Interfaces, _ := net.Interfaces()
@@ -53,7 +54,9 @@ func (d *DNSStruct) GetDNS() []string {
 		fmt.Println(err)
 	}
 	d.NetInterface = NetInterface
-	return d.NetInterface.(darwin.Interface).ReturnDNS()
+	InfoDNS.NameServers = d.NetInterface.(darwin.Interface).ReturnDNS()
+	InfoDNS.SearchDomain = d.NetInterface.(darwin.Interface).ReturnDomainSearch()
+	return InfoDNS
 }
 
 func (d *DNSStruct) RestoreDNS(dns string) {

@@ -23,13 +23,15 @@ func (d *DNSStruct) Change(dns string) {
 	f.Sync()
 }
 
-func (d *DNSStruct) GetDNS() []string {
+func (d *DNSStruct) GetDNS() *DNSInfo {
+	InfoDNS := &DNSInfo{}
 
 	var DNS []string
 
 	DNS = append(DNS, "/etc/resolv.conf.save")
-
-	return DNS
+	InfoDNS.NameServers = DNS
+	InfoDNS.SearchDomain = append(InfoDNS.SearchDomain, "packetfence")
+	return InfoDNS
 }
 
 func (d *DNSStruct) RestoreDNS(dns string) {

@@ -17,6 +17,7 @@ type Interface interface {
 	SetDNSServer(dns string) error
 	ResetDNSServer() error
 	ReturnDNS() []string
+	ReturnDomainSearch() string
 }
 
 // New returns a new Interface
@@ -206,4 +207,10 @@ func (runner *runner) ReturnDNS() []string {
 		dnsServers = append(dnsServers, v.String())
 	}
 	return dnsServers
+}
+
+func (runner *runner) ReturnDomainSearch() []string {
+	var searchDomain []string
+	searchDomain = append(searchDomain, runner.InterFaceDNSConfig.Domain)
+	return searchDomain
 }
