@@ -17,8 +17,8 @@ func (d *DNSStruct) Change(dns string) {
 		fmt.Println(err)
 	}
 
-	f, err := os.Create("/etc/resolv.conf")
-
+	f, err := os.Create(resolvConf)
+	defer f.Close()
 	f.WriteString("nameserver " + dns + "\n")
 	f.Sync()
 }
@@ -28,7 +28,7 @@ func (d *DNSStruct) GetDNS() *DNSInfo {
 
 	var DNS []string
 
-	DNS = append(DNS, "/etc/resolv.conf.save")
+	DNS = append(DNS, resolvConfSave)
 	InfoDNS.NameServers = DNS
 	InfoDNS.SearchDomain = append(InfoDNS.SearchDomain, "packetfence")
 	return InfoDNS
