@@ -17,7 +17,7 @@ type Interface interface {
 	SetDNSServer(dns string) error
 	ResetDNSServer() error
 	ReturnDNS() []string
-	ReturnDomainSearch() string
+	ReturnDomainSearch() []string
 }
 
 // New returns a new Interface
