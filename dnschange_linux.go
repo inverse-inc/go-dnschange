@@ -10,7 +10,7 @@ const (
 	resolvConfSave = "/etc/resolv.conf.save"
 )
 
-func (d *DNSStruct) Change(dns string) {
+func (d *DNSStruct) Change(dns string) error {
 
 	err := os.Rename(resolvConf, resolvConfSave)
 	if err != nil {
@@ -21,6 +21,7 @@ func (d *DNSStruct) Change(dns string) {
 	defer f.Close()
 	f.WriteString("nameserver " + dns + "\n")
 	f.Sync()
+	return err
 }
 
 func (d *DNSStruct) GetDNS() *DNSInfo {

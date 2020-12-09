@@ -7,7 +7,7 @@ import (
 	"github.com/jackpal/gateway"
 )
 
-func (d *DNSStruct) Change(dns string) {
+func (d *DNSStruct) Change(dns string) error {
 	gatewayIP, _ := gateway.DiscoverGateway()
 	NetInterface := windows.New()
 	NetInterfaces, err := NetInterface.GetInterfaces()
@@ -23,6 +23,7 @@ func (d *DNSStruct) Change(dns string) {
 			}
 		}
 	}
+	return err
 }
 
 func (d *DNSStruct) GetDNS() *DNSInfo {
