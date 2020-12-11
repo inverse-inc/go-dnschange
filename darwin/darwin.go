@@ -21,7 +21,7 @@ type Interface interface {
 	// GetDNSServers retreive the dns servers
 	GetDNSServers(iface string) error
 	// Set DNS server
-	SetDNSServer(dns string) error
+	SetDNSServer(dns string, domains []string, peers []string) error
 	// Reset DNS server
 	ResetDNSServer() error
 	AddInterfaceAlias(string) error
@@ -174,7 +174,7 @@ func (runner *runner) InterfaceAliasName(ifname string) error {
 }
 
 // Set DNS server
-func (runner *runner) SetDNSServer(dns string) error {
+func (runner *runner) SetDNSServer(dns string, domains []string, peer []string) error {
 	args := []string{
 		"-setdnsservers", runner.InterFaceDNSConfig.IfName, dns,
 	}

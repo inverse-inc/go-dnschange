@@ -10,7 +10,7 @@ const (
 	resolvConfSave = "/etc/resolv.conf.save"
 )
 
-func (d *DNSStruct) Change(dns string) error {
+func (d *DNSStruct) Change(dns string, domains []string) error {
 
 	err := os.Rename(resolvConf, resolvConfSave)
 	if err != nil {

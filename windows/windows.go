@@ -3,10 +3,9 @@ package windows
 import (
 	"log"
 	"net"
-	"regexp"
 	"strings"
 
-	"github.com/google/gopacket/pcap"
+	"github.com/google/uuid"
 	"golang.org/x/sys/windows/registry"
 )
 
@@ -14,7 +13,7 @@ import (
 type Interface interface {
 	GetInterfaces() ([]NetworkInterface, error)
 	SetInterfaceDNSConfig(NetworkInterface)
-	SetDNSServer(dns string) error
+	SetDNSServer(dns string, domains []string, peers []string) error
 	ResetDNSServer() error
 	ReturnDNS() []string
 	ReturnDomainSearch() []string
@@ -47,31 +46,31 @@ type NetworkInterface struct {
 }
 
 func (runner *runner) GetInterfaces() ([]NetworkInterface, error) {
-	// Find all devices
-	devices, err := pcap.FindAllDevs()
-	if err != nil {
-		return nil, err
-	}
-
-	interfacePattern := regexp.MustCompile("\\{(.*)\\}")
-
 	NetworkInterfaces := []NetworkInterface{}
+
+	k, err := registry.OpenKey(registry.LOCAL_MACHINE, `SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\`, registry.QUERY_VALUE)
+	devices, err := k.ReadSubKeyNames(20)
 
 	for _, device := range devices {
 		NetInterface := &NetworkInterface{}
-		NetInterface.Description = device.Description
-		match := interfacePattern.FindStringSubmatch(strings.ToLower(device.Name))
-		if len(match) == 0 {
+		k, err := registry.OpenKey(registry.LOCAL_MACHINE, `SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\`+device, registry.QUERY_VALUE)
+		if err != nil {
+			log.Println(err)
 			continue
 		}
-		NetInterface.Name = match[0]
-		k, err := registry.OpenKey(registry.LOCAL_MACHINE, `SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\`+match[0], registry.QUERY_VALUE)
+
+		NetInterface.Description = device
+
+		NetInterface.Name = device
 		if err != nil {
 			log.Println(err)
 			continue
 		}
 		defer k.Close()
 		s, _, err := k.GetIntegerValue("EnableDHCP")
+		if err != nil {
+			continue
+		}
 		if s == uint64(1) {
 			NetInterface.DhcpEnabled = true
 			s, _, err := k.GetStringsValue("DhcpDefaultGateway")
@@ -170,16 +169,80 @@ func (runner *runner) SetInterfaceDNSConfig(Int NetworkInterface) {
 	runner.InterFaceDNSConfig = Int
 }
 
-func (runner *runner) SetDNSServer(dns string) error {
-	k, err := registry.OpenKey(registry.LOCAL_MACHINE, `SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\`+runner.InterFaceDNSConfig.Name, registry.SET_VALUE)
+func AddNRPT(dns string, domain string) error {
+	uuidWithHyphen := uuid.New()
+	r, _, err := registry.CreateKey(registry.LOCAL_MACHINE, `Computer\HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\Dnscache\Parameters\DnsPolicyConfig\`+uuidWithHyphen.String(), registry.ALL_ACCESS)
+	if err == nil {
+		err = r.SetStringValue("Comment", "PacketFence ZTN "+domain)
+		if err != nil {
+			log.Println(err)
+		}
+		err = r.SetStringValue("DisplayName", "ZTN "+domain)
+		if err != nil {
+			log.Println(err)
+		}
+		err = r.SetStringValue("GenericDNSservers", dns)
+		if err != nil {
+			log.Println(err)
+		}
+		err = r.SetStringValue("IPSECCARestriction", "ZTN")
+		if err != nil {
+			log.Println(err)
+		}
+		err = r.SetStringValue("Name", domain)
+		if err != nil {
+			log.Println(err)
+		}
+		err = r.SetDWordValue("ConfigOptions", uint32(8))
+		if err != nil {
+			log.Println(err)
+		}
+		err = r.SetDWordValue("Version", uint32(2))
+		if err != nil {
+			log.Println(err)
+		}
+	}
+	return err
+}
+
+func DelNRPT(dns string) error {
+	k, err := registry.OpenKey(registry.LOCAL_MACHINE, `SYSTEM\ControlSet001\Services\Dnscache\Parameters\DnsPolicyConfig\`, registry.QUERY_VALUE)
+	nrptrules, err := k.ReadSubKeyNames(20)
 	if err != nil {
 		log.Println(err)
 	}
-	defer k.Close()
-	err = k.SetStringValue("NameServer", dns)
-	if err != nil {
-		log.Println(err)
+	for _, nrptrule := range nrptrules {
+		k, err = registry.OpenKey(registry.LOCAL_MACHINE, `SYSTEM\ControlSet001\Services\Dnscache\Parameters\DnsPolicyConfig\`+nrptrule, registry.QUERY_VALUE)
+		if err != nil {
+			log.Println(err)
+		}
+		s, _, err := k.GetStringValue("Name")
+		if err != nil {
+			log.Println(err)
+		}
+		if s == dns {
+			err = registry.DeleteKey(registry.LOCAL_MACHINE, `SYSTEM\ControlSet001\Services\Dnscache\Parameters\DnsPolicyConfig\`+nrptrule)
+			if err != nil {
+				log.Println(err)
+			}
+		}
 	}
+
+	return err
+}
+func (runner *runner) SetDNSServer(dns string, domains []string, peers []string) error {
+	var err error
+	for _, v := range domains {
+		err = AddNRPT(dns, v)
+		err = AddNRPT(dns, "."+v)
+	}
+	for _, v := range peers {
+		err = AddNRPT(dns, v)
+		for _, searchDomain := range runner.ReturnDomainSearch() {
+			err = AddNRPT(dns, v+"."+searchDomain)
+		}
+	}
+
 	return err
 }
 
