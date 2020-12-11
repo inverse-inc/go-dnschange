@@ -14,7 +14,7 @@ type Interface interface {
 	GetInterfaces() ([]NetworkInterface, error)
 	SetInterfaceDNSConfig(NetworkInterface)
 	SetDNSServer(dns string, domains []string, peers []string) error
-	ResetDNSServer() error
+	ResetDNSServer(dns string) error
 	ReturnDNS() []string
 	ReturnDomainSearch() []string
 }
@@ -48,9 +48,8 @@ type NetworkInterface struct {
 func (runner *runner) GetInterfaces() ([]NetworkInterface, error) {
 	NetworkInterfaces := []NetworkInterface{}
 
-	k, err := registry.OpenKey(registry.LOCAL_MACHINE, `SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\`, registry.QUERY_VALUE)
+	k, err := registry.OpenKey(registry.LOCAL_MACHINE, `SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces`, registry.READ)
 	devices, err := k.ReadSubKeyNames(20)
-
 	for _, device := range devices {
 		NetInterface := &NetworkInterface{}
 		k, err := registry.OpenKey(registry.LOCAL_MACHINE, `SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\`+device, registry.QUERY_VALUE)
@@ -162,6 +161,7 @@ func (runner *runner) GetInterfaces() ([]NetworkInterface, error) {
 		}
 		NetworkInterfaces = append(NetworkInterfaces, *NetInterface)
 	}
+
 	return NetworkInterfaces, err
 }
 
@@ -171,7 +171,8 @@ func (runner *runner) SetInterfaceDNSConfig(Int NetworkInterface) {
 
 func AddNRPT(dns string, domain string) error {
 	uuidWithHyphen := uuid.New()
-	r, _, err := registry.CreateKey(registry.LOCAL_MACHINE, `Computer\HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\Dnscache\Parameters\DnsPolicyConfig\`+uuidWithHyphen.String(), registry.ALL_ACCESS)
+	r, _, err := registry.CreateKey(registry.LOCAL_MACHINE, `SYSTEM\ControlSet001\Services\Dnscache\Parameters\DnsPolicyConfig\{`+strings.ToUpper(uuidWithHyphen.String())+"}", registry.ALL_ACCESS)
+
 	if err == nil {
 		err = r.SetStringValue("Comment", "PacketFence ZTN "+domain)
 		if err != nil {
@@ -206,17 +207,18 @@ func AddNRPT(dns string, domain string) error {
 }
 
 func DelNRPT(dns string) error {
-	k, err := registry.OpenKey(registry.LOCAL_MACHINE, `SYSTEM\ControlSet001\Services\Dnscache\Parameters\DnsPolicyConfig\`, registry.QUERY_VALUE)
-	nrptrules, err := k.ReadSubKeyNames(20)
+	k, err := registry.OpenKey(registry.LOCAL_MACHINE, `SYSTEM\ControlSet001\Services\Dnscache\Parameters\DnsPolicyConfig\`, registry.READ)
+	nrptrules, err := k.ReadSubKeyNames(50)
 	if err != nil {
 		log.Println(err)
 	}
+
 	for _, nrptrule := range nrptrules {
 		k, err = registry.OpenKey(registry.LOCAL_MACHINE, `SYSTEM\ControlSet001\Services\Dnscache\Parameters\DnsPolicyConfig\`+nrptrule, registry.QUERY_VALUE)
 		if err != nil {
 			log.Println(err)
 		}
-		s, _, err := k.GetStringValue("Name")
+		s, _, err := k.GetStringValue("GenericDNSservers")
 		if err != nil {
 			log.Println(err)
 		}
@@ -246,21 +248,12 @@ func (runner *runner) SetDNSServer(dns string, domains []string, peers []string)
 	return err
 }
 
-func (runner *runner) ResetDNSServer() error {
-	k, err := registry.OpenKey(registry.LOCAL_MACHINE, `SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\`+runner.InterFaceDNSConfig.Name, registry.SET_VALUE)
+func (runner *runner) ResetDNSServer(dns string) error {
+	err := DelNRPT(dns)
 	if err != nil {
 		log.Println(err)
 	}
-	defer k.Close()
-	var dnsServers []string
-	for _, v := range runner.InterFaceDNSConfig.DNSServers {
-		dnsServers = append(dnsServers, v.String())
-	}
-	dnsservers := strings.Join(dnsServers, ",")
-	err = k.SetStringValue("NameServer", dnsservers)
-	if err != nil {
-		log.Println(err)
-	}
+
 	return err
 }
 

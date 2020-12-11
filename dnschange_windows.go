@@ -48,5 +48,5 @@ func (d *DNSStruct) GetDNS() *DNSInfo {
 }
 
 func (d *DNSStruct) RestoreDNS(dns string) {
-	d.NetInterface.(windows.Interface).ResetDNSServer()
+	d.NetInterface.(windows.Interface).ResetDNSServer(dns)
 }
