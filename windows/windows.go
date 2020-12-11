@@ -186,7 +186,7 @@ func AddNRPT(dns string, domain string) error {
 		if err != nil {
 			log.Println(err)
 		}
-		err = r.SetStringValue("IPSECCARestriction", "ZTN")
+		err = r.SetStringValue("IPSECCARestriction", "")
 		if err != nil {
 			log.Println(err)
 		}
@@ -241,6 +241,9 @@ func (runner *runner) SetDNSServer(dns string, domains []string, peers []string)
 	for _, v := range peers {
 		err = AddNRPT(dns, v)
 		for _, searchDomain := range runner.ReturnDomainSearch() {
+			if searchDomain == "" {
+				continue
+			}
 			err = AddNRPT(dns, v+"."+searchDomain)
 		}
 	}
