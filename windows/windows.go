@@ -49,7 +49,7 @@ func (runner *runner) GetInterfaces() ([]NetworkInterface, error) {
 	NetworkInterfaces := []NetworkInterface{}
 
 	k, err := registry.OpenKey(registry.LOCAL_MACHINE, `SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces`, registry.READ)
-	devices, err := k.ReadSubKeyNames(20)
+	devices, _ := k.ReadSubKeyNames(20)
 	for _, device := range devices {
 		NetInterface := &NetworkInterface{}
 		k, err := registry.OpenKey(registry.LOCAL_MACHINE, `SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\`+device, registry.QUERY_VALUE)
