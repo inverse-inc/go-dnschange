@@ -190,7 +190,7 @@ func AddNRPT(dns string, domain string) error {
 		if err != nil {
 			log.Println(err)
 		}
-		err = r.SetStringValue("Name", domain)
+		err = r.SetStringsValue("Name", []string{domain})
 		if err != nil {
 			log.Println(err)
 		}
