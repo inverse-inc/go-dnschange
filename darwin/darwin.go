@@ -187,17 +187,7 @@ func (runner *runner) SetDNSServer(dns string, domains []string, peers []string,
 	for _, v := range domains {
 		Name = append(Name, v)
 	}
-	for _, v := range peers {
-		if v != "" {
-			Name = append(Name, v+"."+internal)
-			for _, searchDomain := range runner.ReturnDomainSearch() {
-				if searchDomain == "" {
-					continue
-				}
-				Name = append(Name, v+"."+searchDomain)
-			}
-		}
-	}
+	Name = append(Name, internal)
 	err := AddResolver(dns, Name)
 	return err
 }
