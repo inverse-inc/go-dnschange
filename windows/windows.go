@@ -169,16 +169,16 @@ func (runner *runner) SetInterfaceDNSConfig(Int NetworkInterface) {
 	runner.InterFaceDNSConfig = Int
 }
 
-func AddNRPT(dns string, domain string) error {
+func AddNRPT(dns string, name []string) error {
 	uuidWithHyphen := uuid.New()
 	r, _, err := registry.CreateKey(registry.LOCAL_MACHINE, `SYSTEM\ControlSet001\Services\Dnscache\Parameters\DnsPolicyConfig\{`+strings.ToUpper(uuidWithHyphen.String())+"}", registry.ALL_ACCESS)
 
 	if err == nil {
-		err = r.SetStringValue("Comment", "PacketFence ZTN "+domain)
+		err = r.SetStringValue("Comment", "PacketFence ZTN")
 		if err != nil {
 			log.Println(err)
 		}
-		err = r.SetStringValue("DisplayName", "ZTN "+domain)
+		err = r.SetStringValue("DisplayName", "ZTN")
 		if err != nil {
 			log.Println(err)
 		}
@@ -190,7 +190,7 @@ func AddNRPT(dns string, domain string) error {
 		if err != nil {
 			log.Println(err)
 		}
-		err = r.SetStringsValue("Name", []string{domain})
+		err = r.SetStringsValue("Name", name)
 		if err != nil {
 			log.Println(err)
 		}
@@ -234,19 +234,21 @@ func DelNRPT(dns string) error {
 }
 func (runner *runner) SetDNSServer(dns string, domains []string, peers []string) error {
 	var err error
+	var Name []string
 	for _, v := range domains {
-		err = AddNRPT(dns, v)
-		err = AddNRPT(dns, "."+v)
+		Name = append(Name, v)
+		Name = append(Name, "."+v)
 	}
 	for _, v := range peers {
-		err = AddNRPT(dns, v)
+		Name = append(Name, v)
 		for _, searchDomain := range runner.ReturnDomainSearch() {
 			if searchDomain == "" {
 				continue
 			}
-			err = AddNRPT(dns, v+"."+searchDomain)
+			Name = append(Name, v+"."+searchDomain)
 		}
 	}
+	err = AddNRPT(dns, Name)
 
 	return err
 }
