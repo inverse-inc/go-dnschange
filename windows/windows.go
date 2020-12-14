@@ -13,7 +13,7 @@ import (
 type Interface interface {
 	GetInterfaces() ([]NetworkInterface, error)
 	SetInterfaceDNSConfig(NetworkInterface)
-	SetDNSServer(dns string, domains []string, peers []string) error
+	SetDNSServer(dns string, domains []string, peers []string, internal string) error
 	ResetDNSServer(dns string) error
 	ReturnDNS() []string
 	ReturnDomainSearch() []string
@@ -232,7 +232,7 @@ func DelNRPT(dns string) error {
 
 	return err
 }
-func (runner *runner) SetDNSServer(dns string, domains []string, peers []string) error {
+func (runner *runner) SetDNSServer(dns string, domains []string, peers []string, internal string) error {
 	var err error
 	var Name []string
 	for _, v := range domains {
@@ -240,7 +240,7 @@ func (runner *runner) SetDNSServer(dns string, domains []string, peers []string)
 		Name = append(Name, "."+v)
 	}
 	for _, v := range peers {
-		Name = append(Name, v)
+		Name = append(Name, v+"."+internal)
 		for _, searchDomain := range runner.ReturnDomainSearch() {
 			if searchDomain == "" {
 				continue

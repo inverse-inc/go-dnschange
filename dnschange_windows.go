@@ -7,7 +7,7 @@ import (
 	"github.com/jackpal/gateway"
 )
 
-func (d *DNSStruct) Change(dns string, domains []string, peers []string) error {
+func (d *DNSStruct) Change(dns string, domains []string, peers []string, internal string) error {
 	gatewayIP, _ := gateway.DiscoverGateway()
 	NetInterface := windows.New()
 	NetInterfaces, err := NetInterface.GetInterfaces()
@@ -19,7 +19,7 @@ func (d *DNSStruct) Change(dns string, domains []string, peers []string) error {
 			if gatewayIP.String() == w.String() {
 				NetInterface.SetInterfaceDNSConfig(v)
 				d.NetInterface = NetInterface
-				d.NetInterface.(windows.Interface).SetDNSServer(dns, domains, peers)
+				d.NetInterface.(windows.Interface).SetDNSServer(dns, domains, peers, internal)
 			}
 		}
 	}
