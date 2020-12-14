@@ -61,6 +61,6 @@ func (d *DNSStruct) GetDNS() *DNSInfo {
 }
 
 func (d *DNSStruct) RestoreDNS(dns string) {
-	d.NetInterface.(darwin.Interface).ResetDNSServer()
+	d.NetInterface.(darwin.Interface).ResetDNSServer(dns)
 	d.NetInterface.(darwin.Interface).RemoveInterfaceAlias(dns)
 }

@@ -3,6 +3,9 @@ package darwin
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"log"
+	"os"
 	"regexp"
 	"strings"
 	"sync"
@@ -21,9 +24,9 @@ type Interface interface {
 	// GetDNSServers retreive the dns servers
 	GetDNSServers(iface string) error
 	// Set DNS server
-	SetDNSServer(dns string, domains []string, peers []string) error
+	SetDNSServer(dns string, domains []string, peers []string, internal string) error
 	// Reset DNS server
-	ResetDNSServer() error
+	ResetDNSServer(dns string) error
 	AddInterfaceAlias(string) error
 	RemoveInterfaceAlias(string) error
 	ReturnDNS() []string
@@ -174,29 +177,67 @@ func (runner *runner) InterfaceAliasName(ifname string) error {
 }
 
 // Set DNS server
-func (runner *runner) SetDNSServer(dns string, domains []string, peer []string) error {
-	args := []string{
-		"-setdnsservers", runner.InterFaceDNSConfig.IfName, dns,
+func (runner *runner) SetDNSServer(dns string, domains []string, peers []string, internal string) error {
+	path := "/etc/resolver"
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		os.Mkdir(path, os.ModeDir)
 	}
-	cmd := strings.Join(args, " ")
-	if stdout, err := runner.exec.Command(cmdNetworksetup, args...).CombinedOutput(); err != nil {
-		return fmt.Errorf("failed to set dns servers on [%v], error: %v. cmd: %v. stdout: %v", runner.InterFaceDNSConfig.IfName, err.Error(), cmd, string(stdout))
+
+	var Name []string
+	for _, v := range domains {
+		Name = append(Name, v)
 	}
-	return nil
+	for _, v := range peers {
+		if v != "" {
+			Name = append(Name, v+"."+internal)
+			for _, searchDomain := range runner.ReturnDomainSearch() {
+				if searchDomain == "" {
+					continue
+				}
+				Name = append(Name, v+"."+searchDomain)
+			}
+		}
+	}
+	err := AddResolver(dns, Name)
+	return err
+}
+
+func AddResolver(dns string, name []string) error {
+	var err error
+
+	for _, v := range name {
+		f, _ := os.Create("/etc/resolver/" + v)
+		f.WriteString("nameserver " + dns + "\n")
+		f.Sync()
+		f.Close()
+	}
+	return err
+
+}
+
+func DelResolver(dns string) error {
+	rgx, _ := regexp.Compile("nameserver\\s+" + dns)
+
+	files, err := ioutil.ReadDir("/etc/resolver/")
+
+	for _, f := range files {
+		data, _ := ioutil.ReadFile("/etc/resolver/" + f.Name())
+		if rgx.MatchString(string(data)) {
+			err = os.Remove("/etc/resolver/" + f.Name())
+		}
+		fmt.Println(f.Name())
+	}
+	return err
 }
 
 // Reset DNS
-func (runner *runner) ResetDNSServer() error {
-	args := []string{
-		"-setdnsservers", runner.InterFaceDNSConfig.IfName, strings.Join(runner.InterFaceDNSConfig.NameServers[:], " "),
-	}
-	cmd := strings.Join(args, " ")
-
-	if stdout, err := runner.exec.Command(cmdNetworksetup, args...).CombinedOutput(); err != nil {
-		return fmt.Errorf("failed to reset dns servers on [%v], error: %v. cmd: %v. stdout: %v", runner.InterFaceDNSConfig.IfName, err.Error(), cmd, string(stdout))
+func (runner *runner) ResetDNSServer(dns string) error {
+	err := DelResolver(dns)
+	if err != nil {
+		log.Println(err)
 	}
 
-	return nil
+	return err
 }
 
 // Add interface alias
