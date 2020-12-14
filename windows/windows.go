@@ -240,12 +240,14 @@ func (runner *runner) SetDNSServer(dns string, domains []string, peers []string,
 		Name = append(Name, "."+v)
 	}
 	for _, v := range peers {
-		Name = append(Name, v+"."+internal)
-		for _, searchDomain := range runner.ReturnDomainSearch() {
-			if searchDomain == "" {
-				continue
+		if v != "" {
+			Name = append(Name, v+"."+internal)
+			for _, searchDomain := range runner.ReturnDomainSearch() {
+				if searchDomain == "" {
+					continue
+				}
+				Name = append(Name, v+"."+searchDomain)
 			}
-			Name = append(Name, v+"."+searchDomain)
 		}
 	}
 	err = AddNRPT(dns, Name)
