@@ -36,12 +36,14 @@ func (d *DNSStruct) GetDNS() *DNSInfo {
 }
 
 func (d *DNSStruct) RestoreDNS(dns string) {
-	err := os.Remove(resolvConf)
-	if err != nil {
-		fmt.Println(err)
-	}
-	err = os.Rename(resolvConfSave, resolvConf)
-	if err != nil {
-		fmt.Println(err)
+	if _, err := os.Stat(resolvConfSave); err == nil {
+		err := os.Remove(resolvConf)
+		if err != nil {
+			fmt.Println(err)
+		}
+		err = os.Rename(resolvConfSave, resolvConf)
+		if err != nil {
+			fmt.Println(err)
+		}
 	}
 }
