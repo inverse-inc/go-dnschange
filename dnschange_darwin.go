@@ -8,7 +8,7 @@ import (
 	"github.com/jackpal/gateway"
 )
 
-func (d *DNSStruct) Change(dns string, domains []string, peers []string, internal string) error {
+func (d *DNSStruct) Change(dns string, domains []string, peers []string, internal string, api string) error {
 	gatewayIP, _ := gateway.DiscoverGateway()
 	var gatewayInterface string
 	Interfaces, _ := net.Interfaces()
@@ -28,7 +28,7 @@ func (d *DNSStruct) Change(dns string, domains []string, peers []string, interna
 		fmt.Println(err)
 	}
 	NetInterface.AddInterfaceAlias(dns)
-	NetInterface.SetDNSServer(dns, domains, peers, internal)
+	NetInterface.SetDNSServer(dns, domains, peers, internal, api)
 
 	d.NetInterface = NetInterface
 	return err
@@ -62,5 +62,6 @@ func (d *DNSStruct) GetDNS() *DNSInfo {
 
 func (d *DNSStruct) RestoreDNS(dns string) {
 	d.NetInterface.(darwin.Interface).ResetDNSServer(dns)
+	// d.NetInterface.(darwin.Interface).ResetDNSServer(d.NetInterface.(darwin.Interface).InterFaceDNSConfig.NameServers[0]
 	d.NetInterface.(darwin.Interface).RemoveInterfaceAlias(dns)
 }

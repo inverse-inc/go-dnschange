@@ -24,7 +24,7 @@ type Interface interface {
 	// GetDNSServers retreive the dns servers
 	GetDNSServers(iface string) error
 	// Set DNS server
-	SetDNSServer(dns string, domains []string, peers []string, internal string) error
+	SetDNSServer(dns string, domains []string, peers []string, internal string, api string) error
 	// Reset DNS server
 	ResetDNSServer(dns string) error
 	AddInterfaceAlias(string) error
@@ -177,7 +177,7 @@ func (runner *runner) InterfaceAliasName(ifname string) error {
 }
 
 // Set DNS server
-func (runner *runner) SetDNSServer(dns string, domains []string, peers []string, internal string) error {
+func (runner *runner) SetDNSServer(dns string, domains []string, peers []string, internal string, api string) error {
 	path := "/etc/resolver"
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		os.Mkdir(path, os.ModeDir)
@@ -189,6 +189,10 @@ func (runner *runner) SetDNSServer(dns string, domains []string, peers []string,
 	}
 	Name = append(Name, internal)
 	err := AddResolver(dns, Name)
+
+	// Forward api fqdn to original dns server
+	err = AddResolver(runner.InterFaceDNSConfig.NameServers[0], []string{api})
+
 	return err
 }
 
