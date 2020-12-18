@@ -239,9 +239,10 @@ func (runner *runner) SetDNSServer(dns string, domains []string, peers []string,
 		Name = append(Name, v)
 		Name = append(Name, "."+v)
 	}
+	Name = append(Name, internal)
+	Name = append(Name, "."+internal)
 	for _, v := range peers {
 		if v != "" {
-			Name = append(Name, v+"."+internal)
 			for _, searchDomain := range runner.ReturnDomainSearch() {
 				if searchDomain == "" {
 					continue
