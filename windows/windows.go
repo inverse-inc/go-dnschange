@@ -254,17 +254,21 @@ func (runner *runner) SetDNSServer(dns string, domains []string, peers []string,
 	err = AddNRPT(dns, Name)
 
 	// Forward api fqdn to original dns server
-	var localDNS string
-	var localDNSIP []string
-	if len(runner.InterFaceDNSConfig.DNSServers) > 1 {
-		for _, v := range runner.InterFaceDNSConfig.DNSServers {
-			localDNSIP = append(localDNSIP, v.String())
+
+	if net.ParseIP(api) == nil {
+		var localDNS string
+		var localDNSIP []string
+		if len(runner.InterFaceDNSConfig.DNSServers) > 1 {
+			for _, v := range runner.InterFaceDNSConfig.DNSServers {
+				localDNSIP = append(localDNSIP, v.String())
+			}
+			localDNS = strings.Join(localDNSIP, ";")
+		} else {
+			localDNS = runner.InterFaceDNSConfig.DNSServers[0].String()
 		}
-		localDNS = strings.Join(localDNSIP, ";")
-	} else {
-		localDNS = runner.InterFaceDNSConfig.DNSServers[0].String()
+		err = AddNRPT(localDNS, []string{api})
 	}
-	err = AddNRPT(localDNS, []string{api})
+
 	return err
 }
 
