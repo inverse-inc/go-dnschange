@@ -230,6 +230,10 @@ func (runner *runner) ResetDNSServer(dns string) error {
 	if err != nil {
 		log.Println(err)
 	}
+	err = DelResolver(runner.InterFaceDNSConfig.NameServers[0])
+	if err != nil {
+		log.Println(err)
+	}
 
 	return err
 }
