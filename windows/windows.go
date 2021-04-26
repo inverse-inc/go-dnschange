@@ -99,13 +99,13 @@ func (runner *runner) GetInterfaces() ([]NetworkInterface, error) {
 				if err != nil {
 					log.Println(err)
 				} else {
-					dns := strings.Split(t, ",")
+					dns := strings.Split(t, " ")
 					for _, v := range dns {
 						NetInterface.DNSServers = append(NetInterface.DNSServers, net.ParseIP(v))
 					}
 				}
 			} else {
-				dns := strings.Split(t, ",")
+				dns := strings.Split(t, " ")
 				for _, v := range dns {
 					NetInterface.DNSServers = append(NetInterface.DNSServers, net.ParseIP(v))
 				}
